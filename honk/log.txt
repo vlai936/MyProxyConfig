@@ -1,0 +1,3 @@
+logread -f -e honk-core >> /tmp/honk.log
+
+grep -i -E "provider_refresh|fetch_failed|subscri" /tmp/honk.log

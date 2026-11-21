@@ -1,0 +1,179 @@
+# honk 合并测试版 /etc/honk/config.dae
+
+node {
+    subproxy: 'socks5://192.168.2.107:1082'
+}
+subscription {
+    sub: '' {
+        ua: 'clash.meta/1.19.30'
+        interval: 12h
+        cache: true
+        route: SubDownload
+    }
+}
+
+group {
+    JP {
+        filter: name(regex: '🇯🇵|日本|Japan|JP|东京|大阪')
+        policy: score
+        final: Final
+    }
+    HK {
+        filter: name(regex: '🇭🇰|香港|Hong Kong|HK')
+        policy: score
+        final: Final
+    }
+    US {
+        filter: name(regex: '🇺🇸|美国|United States|USA|US|洛杉矶|纽约|芝加哥|达拉斯|西雅图|硅谷|美西|美东')
+        policy: score
+        final: Final
+    }
+    SG {
+        filter: name(regex: '🇸🇬|新加坡|Singapore|SG')
+        policy: score
+        final: Final
+    }
+    TW {
+        filter: name(regex: '🇹🇼|台湾|Taiwan|台北|TW')
+        policy: score
+        final: Final
+    }
+    KR {
+        filter: name(regex: '🇰🇷|韩国|Korea|首尔|KR')
+        policy: score
+        final: Final
+    }
+    Proxy {
+        filter: group('JP', 'HK', 'US', 'SG', 'TW', 'KR')
+        policy: selector
+        default: 'JP'
+        final: Final
+    }
+    AI {
+        filter: group('JP', 'HK', 'US', 'SG', 'TW', 'KR')
+        policy: selector
+        default: 'JP'
+        final: Final
+    }
+    YouTube {
+        filter: group('JP', 'HK', 'US', 'SG', 'TW', 'KR')
+        policy: selector
+        default: 'JP'
+        final: Final
+    }
+    Google {
+        filter: group('JP', 'HK', 'US', 'SG', 'TW', 'KR')
+        policy: selector
+        default: 'JP'
+        final: Final
+    }
+    Github {
+        filter: group('JP', 'HK', 'US', 'SG', 'TW', 'KR')
+        policy: selector
+        default: 'JP'
+        final: Final
+    }
+    Telegram {
+        filter: group('JP', 'HK', 'US', 'SG', 'TW', 'KR')
+        policy: selector
+        default: 'JP'
+        final: Final
+    }
+    SubDownload {
+        filter: name('subproxy')
+        filter: group('Proxy')
+        policy: fallback
+        final: direct
+    }
+    Final {
+        filter: group('JP', 'HK', 'US', 'SG', 'TW', 'KR')
+        policy: score
+        final: block
+    }
+}
+
+dns {
+    upstream {
+        remote: 'https://dns.google/dns-query' -> Proxy
+        local: 'udp://210.21.196.6:53' -> direct
+    }
+    routing {
+        request {
+            qtype(https, svcb) -> reject
+            qtype(aaaa) -> reject
+            # sip(192.168.2.107/32) -> local
+            qname(suffix: dasho.pqjc.site) -> remote
+            qname(suffix: mmbiz.qpic.cn) -> local
+            qname(suffix: mmbiz2.qpic.cn) -> local
+            qname(suffix: mmbiz.qcloudimg.com) -> local
+            qname(suffix: googleapis.cn, suffix: xn--ngstr-lra8j.com) -> remote
+            qname(geosite: cn, geosite: microsoft@cn, geosite: apple@cn, geosite: private) -> local
+            qname(geosite: geolocation-!cn) -> remote
+            fallback: remote
+        }
+        response {
+            upstream(remote) && ip(geoip: cn) -> local
+            fallback: accept
+        }
+    }
+}
+
+routing {
+    # sip(192.168.2.107/32) && !dport(53, 853) -> direct(must)
+    dip(geoip: private, geoip: cn) && !dport(53, 853) -> direct(must)
+    dport(853) -> block
+    domain(suffix: pqjc.site) -> Google
+    domain(regex: '(^|\.)mmbiz\.qpic\.cn$', regex: '(^|\.)mmbiz2\.qpic\.cn$', regex: '(^|\.)mmbiz\.qcloudimg\.com$', regex: '(^|\.)mp\.weixin\.qq\.com$') -> direct
+    domain(regex: '(^|\.)googleapis\.cn$', regex: '(^|\.)xn--ngstr-lra8j\.com$') -> Google
+    domain(regex: '(^|\.)withgoogle\.com$', regex: '(^|\.)notebooklm\.google$', geosite: category-ai-!cn) -> AI
+    domain(geosite: youtube) -> YouTube
+    domain(geosite: google) -> Google
+    domain(geosite: github) -> Github
+    domain(geosite: microsoft@cn) -> direct
+    domain(geosite: apple@cn) -> direct
+    domain(geosite: telegram) -> Telegram
+    domain(geosite: cn, geosite: geolocation-cn) -> direct
+    domain(geosite: geolocation-!cn) -> Proxy
+    dip(geoip: telegram) -> Telegram
+    fallback: Final
+}
+
+global {
+    lan_interface: eth1
+    wan_interface: eth0
+    data_dir: '/etc/honk'
+    dial_mode: domain
+    tls_implementation: utls
+    bootstrap_resolver: '210.21.196.6:53'
+    log_level: debug
+    check_interval: 150s
+    check_tolerance: 50ms
+}
+
+assets {
+    route: direct
+    subscription {
+        ua: 'clash.meta/1.19.30'
+        interval: 0s
+        cache: false
+    }
+    geodata {
+        geosite: 'https://gh-proxy.com/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geosite.dat'
+        geoip: 'https://gh-proxy.com/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geoip.dat'
+        route: direct
+    }
+}
+
+experimental {
+    native_api {
+        enabled: true
+        listen: '192.168.2.1:9090'
+        password_auth: true
+        config_write: true
+        ui: embedded
+    }
+    cache_file {
+        enabled: true
+        store_dns: true
+    }
+}
