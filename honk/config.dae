@@ -106,7 +106,6 @@ dns {
             qname(suffix: push.apple.com) -> local
             qname(suffix: myoas.com, suffix: oppoit.com) -> local
             qname(suffix: dasho.pqjc.site) -> remote
-            qname(suffix: myoas.com, suffix: oppoit.com) -> local
             qname(suffix: mmbiz.qpic.cn) -> local
             qname(suffix: mmbiz2.qpic.cn) -> local
             qname(suffix: mmbiz.qcloudimg.com) -> local
