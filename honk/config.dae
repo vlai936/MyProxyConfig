@@ -4,7 +4,7 @@ node {
     subproxy: 'socks5://192.168.2.107:1082'
 }
 subscription {
-    sub: '' {
+    sub: 'https://xx/xxx' {
         ua: 'clash.meta/1.19.30'
         interval: 12h
         cache: true
@@ -102,8 +102,10 @@ dns {
             qtype(https, svcb) -> reject
             qtype(aaaa) -> reject
             # sip(192.168.2.107/32) -> local
+            qname(suffix: immortalwrt.org) -> remote
             qname(suffix: imoulife.com, suffix: imou.com, suffix: lechange.cn, suffix: dahuatech.com) -> local
-            qname(suffix: push.apple.com) -> local
+            # Apple 直连
+            qname(full: identity.apple.com, suffix: push.apple.com, keyword: apple.com.edgekey.net) -> local
             qname(suffix: myoas.com, suffix: oppoit.com) -> local
             qname(suffix: dasho.pqjc.site) -> remote
             qname(suffix: mmbiz.qpic.cn) -> local
@@ -124,14 +126,15 @@ dns {
 
 routing {
     # sip(192.168.2.107/32) && !dport(53, 853) -> direct(must)
+    # ImmortalWrt 走代理
+    domain(regex: '(^|\.)immortalwrt\.org$') -> Google
+    # Apple 直连
+    domain(full: identity.apple.com, regex: '(^|\.)push\.apple\.com$', keyword: apple.com.edgekey.net) -> direct
     dip(17.0.0.0/8) -> direct
-    dip(142.251.23.102/32) -> direct
     dip(geoip: private, geoip: cn) && !dport(53, 853) -> direct(must)
     dport(853) -> block
     # 大华 / 乐橙摄像头直连
     domain(regex: '(^|\.)imoulife\.com$', regex: '(^|\.)imou\.com$', regex: '(^|\.)lechange\.cn$', regex: '(^|\.)dahuatech\.com$') -> direct
-    # Apple 推送直连
-    domain(regex: '(^|\.)push\.apple\.com$') -> direct
     # OPPO 直连
     domain(geosite: oppo) -> direct
     domain(regex: '(^|\.)myoas\.com$', regex: '(^|\.)oppoit\.com$') -> direct
@@ -158,7 +161,12 @@ global {
     dial_mode: domain
     tls_implementation: utls
     bootstrap_resolver: '210.21.196.6:53'
-    log_level: info
+    tcp_check_url: 'https://www.gstatic.com/generate_204'
+    tcp_check_http_method: HEAD
+    log_level: debug
+    log_file: '/tmp/honk.log'
+    store_subscribe: true
+    nfqueue_enable: true
     check_interval: 150s
     check_tolerance: 50ms
 }
