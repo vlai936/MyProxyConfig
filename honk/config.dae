@@ -4,7 +4,7 @@ node {
     subproxy: 'socks5://192.168.2.107:1082'
 }
 subscription {
-    sub: 'https://xx/xxx' {
+    sub: 'https://xx/xx' {
         ua: 'clash.meta/1.19.30'
         interval: 12h
         cache: true
@@ -14,33 +14,33 @@ subscription {
 
 group {
     JP {
-        filter: name(regex: '🇯🇵|日本|Japan|JP|东京|大阪')
-        policy: score
+        filter: name(regex: '🇯🇵|日本|Japan|JP|东京|大阪') && !name(keyword: '0.1倍')
+        policy: urltest
         final: Final
     }
     HK {
         filter: name(regex: '🇭🇰|香港|Hong Kong|HK')
-        policy: score
+        policy: urltest
         final: Final
     }
     US {
         filter: name(regex: '🇺🇸|美国|United States|USA|US|洛杉矶|纽约|芝加哥|达拉斯|西雅图|硅谷|美西|美东')
-        policy: score
+        policy: urltest
         final: Final
     }
     SG {
         filter: name(regex: '🇸🇬|新加坡|Singapore|SG')
-        policy: score
+        policy: urltest
         final: Final
     }
     TW {
         filter: name(regex: '🇹🇼|台湾|Taiwan|台北|TW')
-        policy: score
+        policy: urltest
         final: Final
     }
     KR {
         filter: name(regex: '🇰🇷|韩国|Korea|首尔|KR')
-        policy: score
+        policy: urltest
         final: Final
     }
     Proxy {
@@ -58,13 +58,13 @@ group {
     YouTube {
         filter: group('JP', 'HK', 'US', 'SG', 'TW', 'KR')
         policy: selector
-        default: 'JP'
+        default: 'US'
         final: Final
     }
     Google {
         filter: group('JP', 'HK', 'US', 'SG', 'TW', 'KR')
         policy: selector
-        default: 'JP'
+        default: 'US'
         final: Final
     }
     Github {
@@ -83,18 +83,20 @@ group {
         filter: name('subproxy')
         filter: group('Proxy')
         policy: fallback
+        idle_timeout: 0
         final: direct
     }
     Final {
         filter: group('JP', 'HK', 'US', 'SG', 'TW', 'KR')
-        policy: score
+        policy: urltest
         final: block
     }
 }
 
 dns {
+    ipversion_prefer: 4
     upstream {
-        remote: 'https://dns.cloudflare.com/dns-query' -> Proxy
+        remote: 'https://8.8.8.8/dns-query?tls_server_name=dns.google' -> Proxy
         local: 'udp://210.21.196.6:53' -> direct
     }
     routing {
@@ -161,10 +163,11 @@ global {
     dial_mode: domain
     tls_implementation: utls
     bootstrap_resolver: '210.21.196.6:53'
+    udp_check_dns: 'dns.google:53', '8.8.8.8'
     tcp_check_url: 'https://www.gstatic.com/generate_204'
     tcp_check_http_method: HEAD
-    log_level: debug
-    log_file: '/tmp/honk.log'
+    log_level: error
+    log_file: 'honk.log'
     store_subscribe: true
     nfqueue_enable: true
     check_interval: 150s
@@ -188,7 +191,7 @@ assets {
 experimental {
     native_api {
         enabled: true
-        listen: '192.168.2.1:9090'
+        listen: '192.168.2.1:9527'
         password_auth: true
         config_write: true
         ui: embedded
