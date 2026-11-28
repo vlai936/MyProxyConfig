@@ -1,5 +1,12 @@
 # 以下内容添加至 uci-defaults 文件的 echo "All done!" 下方
 # ================= 首次开机自动扩容：p2 -> 4096 MiB =================
+uci set luci.diag=diag
+uci set luci.diag.ping='www.apple.com'
+uci set luci.diag.route='www.apple.com'
+uci set luci.diag.dns='www.apple.com'
+uci commit luci
+
+
 DISK=/dev/mmcblk0
 PART=/dev/mmcblk0p2
 TARGET=4096
